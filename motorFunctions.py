@@ -19,13 +19,13 @@ def moveForward(speed):
 # rotate the robot left in place
 def rotateLeftInPlace():
     RIGHT_MOTOR.throttle = 1.0
-    LEFT_MOTOR.throttle = 0
+    LEFT_MOTOR.throttle = -1.0
     # need to call stop() to stop rotating
 
 # rotate the robot right in place
 def rotateRightInPlace():
     LEFT_MOTOR.throttle = 1.0
-    RIGHT_MOTOR.throttle = 0
+    RIGHT_MOTOR.throttle = -1.0
     # need to call stop() to stop rotating
 
 # move motors backward at defined speed
@@ -37,3 +37,17 @@ def moveBackward(speed):
 def stop():
     LEFT_MOTOR.throttle = 0
     RIGHT_MOTOR.throttle = 0
+
+def turnLeft():
+    rotateLeftInPlace()
+    time.sleep(0.5)
+    stop()
+
+def turnRight():
+    rotateRightInPlace()
+    time.sleep(0.5)
+    stop()
+
+def turn180():
+    turnLeft()
+    turnLeft()
