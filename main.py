@@ -22,15 +22,15 @@ def moveForward(speed):
     RIGHT_MOTOR.throttle = speed
 
 # rotate the robot left in place
-def rotateLeftInPlace():
-    RIGHT_MOTOR.throttle = 1.0
-    LEFT_MOTOR.throttle = -1.0
+def rotateLeftInPlace(speed):
+    RIGHT_MOTOR.throttle = speed
+    LEFT_MOTOR.throttle = -speed
     # need to call stop() to stop rotating
 
 # rotate the robot right in place
-def rotateRightInPlace():
-    LEFT_MOTOR.throttle = 1.0
-    RIGHT_MOTOR.throttle = -1.0
+def rotateRightInPlace(speed):
+    LEFT_MOTOR.throttle = speed
+    RIGHT_MOTOR.throttle = -speed
     # need to call stop() to stop rotating
 
 # move motors backward at defined speed
@@ -43,13 +43,13 @@ def stop():
     LEFT_MOTOR.throttle = 0
     RIGHT_MOTOR.throttle = 0
 
-def turnLeft():
-    rotateLeftInPlace()
+def turnLeft(speed):
+    rotateLeftInPlace(speed)
     time.sleep(0.5)
     stop()
 
-def turnRight():
-    rotateRightInPlace()
+def turnRight(speed):
+    rotateRightInPlace(speed)
     time.sleep(0.5)
     stop()
 
@@ -79,23 +79,34 @@ def ReadChannel(channel):
   return data
 
 #############################################
+dist = 0
 
 while True:
-    lLevel = ReadChannel(lSensor) in range(980, 1000)
-    mLevel = ReadChannel(mSensor) in range(980, 1000)
-    rLevel = ReadChannel(rSensor) in range(980, 1000)
+    lLevel = ReadChannel(lSensor) in range(800,1000)
+    mLevel = ReadChannel(mSensor) in range(800,1000)
+    rLevel = ReadChannel(rSensor) in range(800,1000)
+    
+    print("l: " + str(ReadChannel(lSensor)), end = " ")
+    print("m: " + str(ReadChannel(mSensor)), end = " ")
+    print("r: " + str(ReadChannel(rSensor)))
+    
     if mLevel and not lLevel and not rLevel:
-        moveForward(moveSpeed)
-    elif mLevel and lLevel and not rLevel:
-        turnLeft()
-    elif mLevel and not lLevel and rLevel:
-        turnRight()
-    elif not mLevel and not lLevel and not rLevel:
         dist = 0
-        while dist < 3:
-            moveForward(moveSpeed)
-            dist += moveSpeed * 2 * pi * 3
-        if dist >= 3:
+        moveForward(moveSpeed)
+        print("forward")
+    elif mLevel and lLevel and not rLevel:
+        dist = 0
+        turnLeft(moveSpeed)
+        print("left")
+    elif mLevel and not lLevel and rLevel:
+        dist = 0
+        turnRight(moveSpeed)
+        print("right")
+    elif not mLevel and not lLevel and not rLevel:
+        print("forward no reading")
+        moveForward(moveSpeed)
+        dist += moveSpeed * 2 * math.pi * 3
+        if dist >= 50:
             stop()
     time.sleep(delay)
     
