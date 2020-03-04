@@ -1,4 +1,6 @@
 import RPi.GPIO as GPIO
+import os
+from time import sleep
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import motorFunctions
 
@@ -25,6 +27,8 @@ class MyServer(BaseHTTPRequestHandler):
         html = '''
             <html>
             <body style="width:960px; margin: 20px auto;">
+            <h1>CPEN291 Project 1 Raspberry Pi web robot control</h1>
+            <p>Current temperature is {}</p>
             <form action="/" method="POST">
                 Robot control: <br />
                 <input type="submit" name="submit" value="Forward"> <br />
@@ -35,7 +39,9 @@ class MyServer(BaseHTTPRequestHandler):
             </body>
             </html>
         '''
+        temp = os.popen("/opt/vc/bin/vcgencmd measure_temp").read()
         self.do_HEAD()
+        self.wfile.write(html.format(temp[5:]).encode("utf-8"))
 
     def do_POST(self):
         #we get the request from the user
@@ -51,18 +57,21 @@ class MyServer(BaseHTTPRequestHandler):
             motorFunctions.moveBackward(1)
             print("car is moving backward")
         if post_data =='Left':
-            motorFunctions.rotateLeftInPlace(1)
+            motorFunctions.rotateLeft()
             print("car is rotating left")
         elif post_data == 'Right':
-            motorFunctions.rotateRightInPlace(1)
+            motorFunctions.rotateRight()
             print("car is rotating right")
         
         self._redirect('/')    # finished handling request, redirect back to the root url
 
+
 # setup the server
 http_server = HTTPServer((host_name, host_port), MyServer)
+print("server open")
 try:
     #handle request until the controller exit the web
     http_server.serve_forever()
 except KeyboardInterrupt:
+    print("server exception")
     http_server.server_close()
