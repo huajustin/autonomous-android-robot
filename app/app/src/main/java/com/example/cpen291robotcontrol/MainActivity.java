@@ -1,0 +1,105 @@
+package com.example.cpen291robotcontrol;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.bluetooth.*;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+
+import java.io.IOException;
+import java.util.Set;
+import java.util.UUID;
+
+import static android.content.ContentValues.TAG;
+
+public class MainActivity extends AppCompatActivity {
+    private static final int REQUEST_ENABLE_BT = 1;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        // Get bluetooth adapter on this device
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        // Return an error if bluetooth is not supported
+        if (bluetoothAdapter == null) {
+            Log.e(TAG, "Bluetooth is not present on this device");
+            return;
+        }
+        // Turn on bluetooth if it is not already enabled
+        if (!bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+
+        // Get the set of connected devices (should only be 1) and set that as pi
+        Set<BluetoothDevice> connectedDevices = bluetoothAdapter.getBondedDevices();
+
+        BluetoothDevice pi = null;
+        for (BluetoothDevice d: connectedDevices) {
+            pi = d;
+        }
+
+        //
+        ConnectThread thread = new ConnectThread(pi);
+        thread.start();
+    }
+}
+
+// TODO: Implement write to write to bluetooth device and set up buttons to take in inputs to write. Also determine where to close socket
+
+private class ConnectThread extends Thread {
+    private final BluetoothSocket mmSocket;
+    private final BluetoothDevice mmDevice;
+
+
+    public ConnectThread(BluetoothDevice device) {
+        // Use a temporary object that is later assigned to mmSocket
+        // because mmSocket is final.
+        BluetoothSocket tmp = null;
+        mmDevice = device;
+
+        try {
+            // Get a BluetoothSocket to connect with the given BluetoothDevice.
+            // MY_UUID is the app's UUID string, also used in the server code.
+            tmp = device.createRfcommSocketToServiceRecord(UUID.fromString("bbcc40a1-adae-41d7-a13f-676f427c9c41"));
+        } catch (IOException e) {
+            Log.e(TAG, "Socket's create() method failed", e);
+        }
+        mmSocket = tmp;
+    }
+
+    public void run() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        // Cancel discovery because it otherwise slows down the connection.
+        bluetoothAdapter.cancelDiscovery();
+
+        try {
+            // Connect to the remote device through the socket. This call blocks
+            // until it succeeds or throws an exception.
+            mmSocket.connect();
+        } catch (IOException connectException) {
+            // Unable to connect; close the socket and return.
+            try {
+                mmSocket.close();
+            } catch (IOException closeException) {
+                Log.e(TAG, "Could not close the client socket", closeException);
+            }
+            return;
+        }
+
+        // The connection attempt succeeded. Perform work associated with
+        // the connection in a separate thread.
+    }
+
+    // Closes the client socket and causes the thread to finish.
+    public void cancel() {
+        try {
+            mmSocket.close();
+        } catch (IOException e) {
+            Log.e(TAG, "Could not close the client socket", e);
+        }
+    }
+}

@@ -1,4 +1,5 @@
 SCRIPT_PATH="Documents/P1_A_G10"
+FILE_PATH="Documents/P1_A_G10/test.py"
 CURRENT_DIR=$(pwd)
 
 if [[ $SCRIPT_PATH != $CURRENT_DIR ]]; then
@@ -6,4 +7,4 @@ if [[ $SCRIPT_PATH != $CURRENT_DIR ]]; then
 fi
 
 git pull
-python test.py 
+python $FILE_PATH

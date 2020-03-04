@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">CPEN 291 Robot Control</string>
+    <string name="button_send" translatable="false">Send</string>
+</resources>
