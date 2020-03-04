@@ -10,6 +10,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from picamera import PiCamera
 
 #############################################
+# Motor definitions and functions
+#############################################
 
 # setup the motor kit
 kit = MotorKit()
@@ -60,6 +62,8 @@ def turn180():
     turnLeft()
 
 #############################################
+# Sensor/spidev definitions and functions
+#############################################
 
 # setting up spi
 spi = spidev.SpiDev()
@@ -84,6 +88,8 @@ def ReadChannel(channel):
   data = ((adc[1]&3) << 8) + adc[2]
   return data
 
+#############################################
+# Web server definitions and functions
 #############################################
 
 host_name = '137.82.226.231'    # Change this to Raspberry Pi IP address
@@ -146,9 +152,13 @@ class MyServer(BaseHTTPRequestHandler):
         self._redirect('/') # finished handling request, redirect back to the root url
 
 #############################################
+# Camera definitions and functions
+#############################################
 
 camera = PiCamera()
 
+#############################################
+# Main loop function
 #############################################
 
 dist = 0
