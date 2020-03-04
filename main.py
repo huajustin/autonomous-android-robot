@@ -1,5 +1,6 @@
 import os
 import time
+import math
 import spidev
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
@@ -63,8 +64,10 @@ spi.open(0,0)
 spi.max_speed_hz=1000000
 
 # Define sensor channels
-channel = 0
- 
+lSensor = 0
+mSensor = 1
+rSensor = 2
+moveSpeed = 0.25
 # Define delay between readings
 delay = 0.1
 
@@ -78,10 +81,21 @@ def ReadChannel(channel):
 #############################################
 
 while True:
-    level = ReadChannel(channel)
-    if level in range(980, 1000):
-        moveForward(1)
-    else:
-        stop()
+    lLevel = ReadChannel(lSensor) in range(980, 1000)
+    mLevel = ReadChannel(mSensor) in range(980, 1000)
+    rLevel = ReadChannel(rSensor) in range(980, 1000)
+    if mLevel and not lLevel and not rLevel:
+        moveForward(moveSpeed)
+    elif mLevel and lLevel and not rLevel:
+        turnLeft()
+    elif mLevel and not lLevel and rLevel:
+        turnRight()
+    elif not mLevel and not lLevel and not rLevel:
+        dist = 0
+        while dist < 3:
+            moveForward(moveSpeed)
+            dist += moveSpeed * 2 * pi * 3
+        if dist >= 3:
+            stop()
     time.sleep(delay)
     
