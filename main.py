@@ -165,7 +165,7 @@ class MyServer(BaseHTTPRequestHandler):
 dist = 0
 speedFactor = 0.3
 moveSpeed = 0.3
-
+direction = 0 # left is 1, right is 2
 try:
     while True:
         lLevel = ReadChannel(lSensor) in range(800,1000)
@@ -179,10 +179,12 @@ try:
         if mLevel and not lLevel and not rLevel:
             dist = 0
             moveForward(moveSpeed)
+            direction = 0
             print("forward")
         elif mLevel and lLevel and rLevel:
             dist = 0
             moveForward(moveSpeed)
+            direction = 0
             print("cross")
         elif (mLevel and lLevel and not rLevel) or lLevel:
             dist = 0
@@ -191,10 +193,10 @@ try:
             while lLevel or rLevel:
                 if lLevel and not mLevel:
                     turnLeft(moveSpeed * speedFactor)
-                    #break
+                    break
                 elif rLevel and not mLevel:
                     turnRight(moveSpeed * speedFactor * decayFactor)
-                elif decayFactor <= 0:
+                elif decayFactor <= 0.2:
                     break
                 elif not mLevel and not lLevel and not rLevel:
                     moveBackward(0.2)
@@ -210,6 +212,7 @@ try:
                 print("MIDDLE: " + str(ReadChannel(mSensor)), end = " ")
                 print("RIGHT: " + str(ReadChannel(rSensor)))
                 print("LEFTL00P")
+            direction = 1
             print("left")
         elif (mLevel and not lLevel and rLevel) or rLevel:
             dist = 0
@@ -221,7 +224,7 @@ try:
                     break
                 elif lLevel and not mLevel:
                     turnLeft(moveSpeed * speedFactor * decayFactor)
-                elif decayFactor <= 0.0:
+                elif decayFactor <= 0.2:
                     break
                 elif not mLevel and not lLevel and not rLevel:
                     moveBackward(0.2)
@@ -237,13 +240,19 @@ try:
                 print("mL: " + str(ReadChannel(mSensor)), end = " ")
                 print("rL: " + str(ReadChannel(rSensor)))
                 print("RIGHTL00P")
+            direction = 2
             print("right")
         elif not mLevel and not lLevel and not rLevel:
             print("forward no reading")
-            moveForward(moveSpeed)
-            dist += moveSpeed * 2 * math.pi * 3
-            if dist >=  100:#19:
-                stop()
+            if direction == 1:
+                turnLeft(speedFactor*1.1)
+            elif direction == 2:
+                turnRight(speedFactor*1.1)
+            else:
+                moveForward(moveSpeed)
+                dist += moveSpeed * 2 * math.pi * 3
+                if dist >=  100:#19:
+                    stop()
         time.sleep(delay)
 except KeyboardInterrupt:
     stop()
