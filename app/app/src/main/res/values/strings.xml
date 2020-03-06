@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">CPEN 291 Robot Control</string>
     <string name="button_send" translatable="false">Send</string>
+    <string name="button_forward">Move forward</string>
+    <string name="button_backward">Move backward</string>
+    <string name="button_rotateleft">Rotate left</string>
+    <string name="button_rotateright">Rotate right</string>
+    <string name="button_turnleft">Turn left</string>
+    <string name="button_turnright">Turn right</string>
+    <string name="button_stop">Stop</string>
+    <string name="exit_button">Exit</string>
 </resources>

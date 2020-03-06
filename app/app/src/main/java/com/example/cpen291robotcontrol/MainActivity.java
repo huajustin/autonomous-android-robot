@@ -44,10 +44,21 @@ public class MainActivity extends AppCompatActivity {
         for (BluetoothDevice d: connectedDevices) {
             pi = d;
         }
-
+        if (pi == null) {
+            Log.e(TAG, "Could not find device");
+        }
         //
         this.thread = new ConnectThread(pi);
+
         thread.start();
+    }
+
+    @Override
+    public void onBackPressed() {
+        thread.cancel();
+        moveTaskToBack(true);
+        android.os.Process.killProcess(android.os.Process.myPid());
+        System.exit(1);
     }
 
     @Override
@@ -56,16 +67,58 @@ public class MainActivity extends AppCompatActivity {
         thread.cancel();
     }
 
-    public void testWrite(View view) {
+    public void stopSignal(View view) {
         byte[] bytes = new byte[1];
         bytes[0] = 1;
         thread.write(bytes);
     }
 
+    public void moveForward(View view) {
+        byte[] bytes = new byte[1];
+        bytes[0] = 2;
+        thread.write(bytes);
+    }
+
+    public void moveBackward(View view) {
+        byte[] bytes = new byte[1];
+        bytes[0] = 3;
+        thread.write(bytes);
+    }
+
+    public void turnLeft(View view) {
+        byte[] bytes = new byte[1];
+        bytes[0] = 4;
+        thread.write(bytes);
+    }
+
+    public void turnRight(View view) {
+        byte[] bytes = new byte[1];
+        bytes[0] = 5;
+        thread.write(bytes);
+    }
+
+    public void rotateLeft(View view) {
+        byte[] bytes = new byte[1];
+        bytes[0] = 6;
+        thread.write(bytes);
+    }
+
+    public void rotateRight(View view) {
+        byte[] bytes = new byte[1];
+        bytes[0] = 7;
+        thread.write(bytes);
+    }
+
+    public void exitSignal(View view) {
+        byte[] bytes = new byte[1];
+        bytes[0] = 0;
+        thread.write(bytes);
+        onBackPressed();
+    }
+
 
 }
 
-// TODO: Implement write to write to bluetooth device and set up buttons to take in inputs to write. Also determine where to close socket
 class ConnectThread extends Thread {
     private final BluetoothSocket mmSocket;
     private final BluetoothDevice mmDevice;
@@ -132,6 +185,7 @@ class ConnectThread extends Thread {
     public void cancel() {
         try {
             mmSocket.close();
+            Log.d(TAG, "Successfully closed client socket");
         } catch (IOException e) {
             Log.e(TAG, "Could not close the client socket", e);
         }
