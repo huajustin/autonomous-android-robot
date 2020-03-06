@@ -22,9 +22,13 @@ RIGHT_MOTOR = kit.motor2
 
 # move motors forward at defined speed
 def moveForward(speed):
-    LEFT_MOTOR.throttle = speed
+    LEFT_MOTOR.throttle = speed * 1.1
     RIGHT_MOTOR.throttle = speed
-
+    
+def nudge(speed):
+    moveForward(speed)
+    time.sleep(0.1)
+    
 # rotate the robot left in place
 def rotateLeftInPlace(speed):
     RIGHT_MOTOR.throttle = speed
@@ -50,12 +54,12 @@ def stop():
 def turnLeft(speed):
     rotateLeftInPlace(speed)
     time.sleep(0.5)
-    stop()
+    #stop()
 
 def turnRight(speed):
     rotateRightInPlace(speed)
     time.sleep(0.5)
-    stop()
+    #stop()
 
 def turn180():
     turnLeft()
@@ -74,9 +78,6 @@ spi.max_speed_hz=1000000
 lSensor = 0
 mSensor = 1
 rSensor = 2
-
-# define default speed
-moveSpeed = 0.25
 
 # Define delay between readings
 delay = 0.1
@@ -155,40 +156,104 @@ class MyServer(BaseHTTPRequestHandler):
 # Camera definitions and functions
 #############################################
 
-camera = PiCamera()
+#camera = PiCamera()
 
 #############################################
 # Main loop function
 #############################################
 
 dist = 0
-
-while True:
-    lLevel = ReadChannel(lSensor) in range(800,1000)
-    mLevel = ReadChannel(mSensor) in range(800,1000)
-    rLevel = ReadChannel(rSensor) in range(800,1000)
-    
-    print("l: " + str(ReadChannel(lSensor)), end = " ")
-    print("m: " + str(ReadChannel(mSensor)), end = " ")
-    print("r: " + str(ReadChannel(rSensor)))
-    
-    if mLevel and not lLevel and not rLevel:
-        dist = 0
-        moveForward(moveSpeed)
-        print("forward")
-    elif mLevel and lLevel and not rLevel:
-        dist = 0
-        turnLeft(moveSpeed)
-        print("left")
-    elif mLevel and not lLevel and rLevel:
-        dist = 0
-        turnRight(moveSpeed)
-        print("right")
-    elif not mLevel and not lLevel and not rLevel:
-        print("forward no reading")
-        moveForward(moveSpeed)
-        dist += moveSpeed * 2 * math.pi * 3
-        if dist >= 50:
-            stop()
-    time.sleep(delay)
-    
+speedFactor = 0.3
+moveSpeed = 0.3
+direction = 0 # left is 1, right is 2
+try:
+    while True:
+        lLevel = ReadChannel(lSensor) in range(800,1000)
+        mLevel = ReadChannel(mSensor) in range(800,1000)
+        rLevel = ReadChannel(rSensor) in range(800,1000)
+        
+        print("l: " + str(ReadChannel(lSensor)), end = " ")
+        print("m: " + str(ReadChannel(mSensor)), end = " ")
+        print("r: " + str(ReadChannel(rSensor)))
+        
+        if mLevel and not lLevel and not rLevel:
+            dist = 0
+            moveForward(moveSpeed)
+            direction = 0
+            print("forward")
+        elif mLevel and lLevel and rLevel:
+            dist = 0
+            moveForward(moveSpeed)
+            direction = 0
+            print("cross")
+        elif (mLevel and lLevel and not rLevel) or lLevel:
+            dist = 0
+            decayFactor = 0.5
+            turnLeft(moveSpeed * .8)
+            while lLevel or rLevel:
+                if lLevel and not mLevel:
+                    turnLeft(moveSpeed * speedFactor)
+                    break
+                elif rLevel and not mLevel:
+                    turnRight(moveSpeed * speedFactor * decayFactor)
+                elif decayFactor <= 0.2:
+                    break
+                elif not mLevel and not lLevel and not rLevel:
+                    moveBackward(0.2)
+                else:
+                    break
+                decayFactor -= 0.1
+                turnLeft(moveSpeed * decayFactor)
+                #time.sleep(0.1)
+                lLevel = ReadChannel(lSensor) in range(800,1000)
+                rLevel = ReadChannel(rSensor) in range(800,1000)
+                mLevel = ReadChannel(mSensor) in range(800,1000)
+                print("LEFT: " + str(ReadChannel(lSensor)), end = " ")
+                print("MIDDLE: " + str(ReadChannel(mSensor)), end = " ")
+                print("RIGHT: " + str(ReadChannel(rSensor)))
+                print("LEFTL00P")
+            direction = 1
+            print("left")
+        elif (mLevel and not lLevel and rLevel) or rLevel:
+            dist = 0
+            decayFactor = 0.5
+            turnRight(moveSpeed * 0.8)
+            while lLevel or rLevel:
+                if rLevel and not mLevel:
+                    turnRight(moveSpeed * speedFactor)
+                    break
+                elif lLevel and not mLevel:
+                    turnLeft(moveSpeed * speedFactor * decayFactor)
+                elif decayFactor <= 0.2:
+                    break
+                elif not mLevel and not lLevel and not rLevel:
+                    moveBackward(0.2)
+                else:
+                    break
+                decayFactor -= 0.1
+                turnRight(moveSpeed*decayFactor)
+                #time.sleep(0.1)
+                lLevel = ReadChannel(lSensor) in range(800,1000)
+                rLevel = ReadChannel(rSensor) in range(800,1000)
+                mLevel = ReadChannel(mSensor) in range(800,1000)
+                print("lL: " + str(ReadChannel(lSensor)), end = " ")
+                print("mL: " + str(ReadChannel(mSensor)), end = " ")
+                print("rL: " + str(ReadChannel(rSensor)))
+                print("RIGHTL00P")
+            direction = 2
+            print("right")
+        elif not mLevel and not lLevel and not rLevel:
+            print("forward no reading")
+            if direction == 1:
+                turnLeft(speedFactor*1.1)
+            elif direction == 2:
+                turnRight(speedFactor*1.1)
+            else:
+                moveForward(moveSpeed)
+                dist += moveSpeed * 2 * math.pi * 3
+                if dist >=  100:#19:
+                    stop()
+        time.sleep(delay)
+except KeyboardInterrupt:
+    stop()
+        
