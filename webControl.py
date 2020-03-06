@@ -43,11 +43,13 @@ class MyCamera():
     def __init__(self):
         self.running = True
 
-    def terminate(self):
-        self.running = False
+    def changeState(self):
+        self.running = not self.running
     
     def run(self):
         while True:
+            if not self.running:
+                continue
             camera.capture('/home/pi/Desktop/picture1.bmp')
             image = Image.open("picture1.bmp")
 
@@ -137,7 +139,9 @@ class MyServer(BaseHTTPRequestHandler):
         if post_data=="Camera":
             if not cThread.is_alive():
                 cThread.start()
-
+            else:
+                c.changeState()
+            
         self._redirect('/')    # finished handling request, redirect back to the root url
 
 # setup the server
