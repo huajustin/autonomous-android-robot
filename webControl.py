@@ -14,32 +14,32 @@ import adafruit_rgb_display.st7735 as st7735        # pylint: disable=unused-imp
 host_name = '137.82.226.228'    # Change this to Raspberry Pi IP address
 host_port = 8000
 
+# Configuration for CS and DC pins (these are PiTFT defaults):
+cs_pin = digitalio.DigitalInOut(board.CE0)
+dc_pin = digitalio.DigitalInOut(board.D24)
+reset_pin = digitalio.DigitalInOut(board.D25)
+
+# Config for display baudrate (default max is 24mhz):
+BAUDRATE = 24000000
+
+# Setup SPI bus using hardware SPI:
+spi = board.SPI()
+camera =PiCamera()
+camera.resolution = (128, 128) 
+
+disp = st7735.ST7735R(spi, rotation=270, height=128, x_offset=2, y_offset=3,  
+
+                    cs=cs_pin, dc=dc_pin, rst=reset_pin, baudrate=BAUDRATE)
+
+width = disp.width   # we swap height/width to rotate it to landscape!
+height = disp.height
+image = Image.new('RGB', (width, height))
+camera.framerate = 30
+
+# Get drawing object to draw on image.
+draw = ImageDraw.Draw(image)
+
 class MyCamera():
- 
-    # Configuration for CS and DC pins (these are PiTFT defaults):
-    cs_pin = digitalio.DigitalInOut(board.CE0)
-    dc_pin = digitalio.DigitalInOut(board.D24)
-    reset_pin = digitalio.DigitalInOut(board.D25)
-    
-    # Config for display baudrate (default max is 24mhz):
-    BAUDRATE = 24000000
-
-    # Setup SPI bus using hardware SPI:
-    spi = board.SPI()
-    camera =PiCamera()
-    camera.resolution = (128, 128) 
-
-    disp = st7735.ST7735R(spi, rotation=270, height=128, x_offset=2, y_offset=3,  
-
-                        cs=cs_pin, dc=dc_pin, rst=reset_pin, baudrate=BAUDRATE)
-
-    width = disp.width   # we swap height/width to rotate it to landscape!
-    height = disp.height
-    image = Image.new('RGB', (width, height))
-    camera.framerate = 30
-
-    # Get drawing object to draw on image.
-    draw = ImageDraw.Draw(image)
     def __init__(self):
         self.running = True
 
@@ -135,7 +135,8 @@ class MyServer(BaseHTTPRequestHandler):
             print("car is rotating right")
         
         if post_data=="Camera":
-            cThread.start()
+            if not cThread.is_alive():
+                cThread.start()
 
         self._redirect('/')    # finished handling request, redirect back to the root url
 
