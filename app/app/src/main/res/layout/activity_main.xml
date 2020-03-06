@@ -10,7 +10,7 @@
         android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="sendMessage"
+        android:onClick="testWrite"
         android:text="@string/button_send"
         tools:layout_editor_absoluteX="161dp"
         tools:layout_editor_absoluteY="208dp" />

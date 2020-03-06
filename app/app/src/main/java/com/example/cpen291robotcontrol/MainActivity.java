@@ -6,8 +6,10 @@ import android.bluetooth.*;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,6 +17,7 @@ import static android.content.ContentValues.TAG;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 1;
+    private ConnectThread thread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,16 +46,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //
-        ConnectThread thread = new ConnectThread(pi);
+        this.thread = new ConnectThread(pi);
         thread.start();
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        thread.cancel();
+    }
+
+    public void testWrite(View view) {
+        byte[] bytes = new byte[1];
+        bytes[0] = 1;
+        thread.write(bytes);
+    }
+
+
 }
 
 // TODO: Implement write to write to bluetooth device and set up buttons to take in inputs to write. Also determine where to close socket
-
-private class ConnectThread extends Thread {
+class ConnectThread extends Thread {
     private final BluetoothSocket mmSocket;
     private final BluetoothDevice mmDevice;
+    private OutputStream mmOutStream;
 
 
     public ConnectThread(BluetoothDevice device) {
@@ -75,6 +92,7 @@ private class ConnectThread extends Thread {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         // Cancel discovery because it otherwise slows down the connection.
         bluetoothAdapter.cancelDiscovery();
+        OutputStream tmpOut = null;
 
         try {
             // Connect to the remote device through the socket. This call blocks
@@ -90,8 +108,24 @@ private class ConnectThread extends Thread {
             return;
         }
 
+        try {
+            tmpOut = mmSocket.getOutputStream();
+        } catch (IOException e) {
+            Log.e(TAG, "Error occurred when creating output stream", e);
+        }
+
+        mmOutStream = tmpOut;
+
         // The connection attempt succeeded. Perform work associated with
         // the connection in a separate thread.
+    }
+
+    public void write(byte[] bytes) {
+        try {
+            mmOutStream.write(bytes);
+        } catch (IOException e) {
+            Log.e(TAG, "Error occurred when sending data", e);
+        }
     }
 
     // Closes the client socket and causes the thread to finish.
