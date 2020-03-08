@@ -22,7 +22,7 @@ RIGHT_MOTOR = kit.motor2
 
 # move motors forward at defined speed
 def moveForward(speed):
-    LEFT_MOTOR.throttle = speed * 1.1
+    LEFT_MOTOR.throttle = speed
     RIGHT_MOTOR.throttle = speed
     
 def nudge(speed):
@@ -163,14 +163,17 @@ class MyServer(BaseHTTPRequestHandler):
 #############################################
 
 dist = 0
-speedFactor = 0.3
-moveSpeed = 0.3
+speedFactor = 0.5
+moveSpeed = 0.35
 direction = 0 # left is 1, right is 2
+UPPER = 1000
+LOWER = 800
+
 try:
     while True:
-        lLevel = ReadChannel(lSensor) in range(800,1000)
-        mLevel = ReadChannel(mSensor) in range(800,1000)
-        rLevel = ReadChannel(rSensor) in range(800,1000)
+        lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
+        mLevel = ReadChannel(mSensor) in range(LOWER,UPPER)
+        rLevel = ReadChannel(rSensor) in range(LOWER,UPPER)
         
         print("l: " + str(ReadChannel(lSensor)), end = " ")
         print("m: " + str(ReadChannel(mSensor)), end = " ")
@@ -192,22 +195,27 @@ try:
             turnLeft(moveSpeed * .8)
             while lLevel or rLevel:
                 if lLevel and not mLevel:
-                    turnLeft(moveSpeed * speedFactor)
+                    print("1")
+                    turnLeft(moveSpeed*speedFactor)
                     break
                 elif rLevel and not mLevel:
+                    print("2")
                     turnRight(moveSpeed * speedFactor * decayFactor)
                 elif decayFactor <= 0.2:
+                    print("3")
                     break
                 elif not mLevel and not lLevel and not rLevel:
+                    print("4")
                     moveBackward(0.2)
                 else:
+                    print("5")
                     break
                 decayFactor -= 0.1
                 turnLeft(moveSpeed * decayFactor)
                 #time.sleep(0.1)
-                lLevel = ReadChannel(lSensor) in range(800,1000)
-                rLevel = ReadChannel(rSensor) in range(800,1000)
-                mLevel = ReadChannel(mSensor) in range(800,1000)
+                lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
+                rLevel = ReadChannel(rSensor) in range(LOWER,UPPER)
+                mLevel = ReadChannel(mSensor) in range(LOWER,UPPER)
                 print("LEFT: " + str(ReadChannel(lSensor)), end = " ")
                 print("MIDDLE: " + str(ReadChannel(mSensor)), end = " ")
                 print("RIGHT: " + str(ReadChannel(rSensor)))
@@ -233,26 +241,27 @@ try:
                 decayFactor -= 0.1
                 turnRight(moveSpeed*decayFactor)
                 #time.sleep(0.1)
-                lLevel = ReadChannel(lSensor) in range(800,1000)
-                rLevel = ReadChannel(rSensor) in range(800,1000)
-                mLevel = ReadChannel(mSensor) in range(800,1000)
+                lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
+                rLevel = ReadChannel(rSensor) in range(LOWER,UPPER)
+                mLevel = ReadChannel(mSensor) in range(LOWER,UPPER)
                 print("lL: " + str(ReadChannel(lSensor)), end = " ")
                 print("mL: " + str(ReadChannel(mSensor)), end = " ")
                 print("rL: " + str(ReadChannel(rSensor)))
                 print("RIGHTL00P")
             direction = 2
             print("right")
-        elif not mLevel and not lLevel and not rLevel:
+        #elif not mLevel and not lLevel and not rLevel:
+        else:
             print("forward no reading")
-            if direction == 1:
-                turnLeft(speedFactor*1.1)
-            elif direction == 2:
-                turnRight(speedFactor*1.1)
-            else:
-                moveForward(moveSpeed)
-                dist += moveSpeed * 2 * math.pi * 3
-                if dist >=  100:#19:
-                    stop()
+            #if direction == 1:
+                #turnLeft(speedFactor)
+            #elif direction == 2:
+                #turnRight(speedFactor)
+            #else:
+            moveForward(moveSpeed)
+            dist += moveSpeed * 2 * math.pi * 3
+            if dist >=  30: # 30 for 3cm
+                stop()
         time.sleep(delay)
 except KeyboardInterrupt:
     stop()
