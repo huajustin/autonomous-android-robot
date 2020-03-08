@@ -6,7 +6,9 @@ import android.bluetooth.*;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -39,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Get the set of connected devices (should only be 1) and set that as pi
         Set<BluetoothDevice> connectedDevices = bluetoothAdapter.getBondedDevices();
-
         BluetoothDevice pi = null;
         for (BluetoothDevice d: connectedDevices) {
             pi = d;
@@ -47,12 +48,53 @@ public class MainActivity extends AppCompatActivity {
         if (pi == null) {
             Log.e(TAG, "Could not find device");
         }
-        //
+        // Create a new thread that will connect to the bluetooth device
         this.thread = new ConnectThread(pi);
-
         thread.start();
+
+        // Add touch listeners to the rotate left and right buttons to handle hold and release actions
+        Button rotateLeft = (Button) findViewById(R.id.button6);
+        Button rotateRight = (Button) findViewById(R.id.button7);
+        rotateLeft.setOnTouchListener(rotateHold);
+        rotateRight.setOnTouchListener(rotateHold);
+
     }
 
+    private View.OnTouchListener rotateHold = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            // When button is released, stop the action
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                v.setPressed(false);
+                stopSignal(v);
+                return true;
+            }
+
+            // If the rotate left button is held, send signal to rotate left
+            if (v.getId() == R.id.button6) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    v.setPressed(true);
+                    rotateLeft(v);
+                    return true;
+                }
+            }
+
+            // If the rotate right button is held, send signal to rotate right
+            if (v.getId() == R.id.button7) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    v.setPressed(true);
+                    rotateRight(v);
+                    return true;
+                }
+            }
+
+            // If none of the cases hold, there was an unexpected trigger so print the stack trace to debug
+            new Throwable().printStackTrace();
+            return false;
+        }
+    };
+
+    // Back button press will kill the current task
     @Override
     public void onBackPressed() {
         thread.cancel();
@@ -61,9 +103,11 @@ public class MainActivity extends AppCompatActivity {
         System.exit(1);
     }
 
+    // Interface function called when the app is closed
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // Make sure the bluetooth thread is closed properly
         thread.cancel();
     }
 
