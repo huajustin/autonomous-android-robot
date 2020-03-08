@@ -159,6 +159,9 @@ class MyServer(BaseHTTPRequestHandler):
             #motorFunctions.turnRight(speed)
             print("car is rotating right")
         
+        if post_data == 'Stop':
+            #motorFunctions.stop()
+            print("stopped")
         if post_data=="Camera":
             #when the user press on the camera button, 
             #change the state of camera state to start/stop taking pictures
