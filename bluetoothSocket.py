@@ -1,6 +1,6 @@
 # from https://circuitdigest.com/microcontroller-projects/controlling-raspberry-pi-gpio-using-android-app-over-bluetooth
 import bluetooth
-#import motorFunctions
+import motorFunctions
  
 # get server socket and set UUID and port number
 server_socket=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
@@ -20,6 +20,7 @@ print("Currently looking for connections...")
 client_socket,address = server_socket.accept()
 print("Accepted connection from {}".format(address))
 
+moveSpeed = 0.35
 # loop to receive communication from client
 while 1: 
     data = client_socket.recv(1024)
@@ -30,7 +31,20 @@ while 1:
     # if client unexpectedly disconnects, also break
     if not data:
         break
- 
+    if data == b'\x01':
+        motorFunctions.stop()
+    if data == b'\x02':
+        motorFunctions.moveForward(moveSpeed)
+    if data == b'\x03':
+        motorFunctions.moveBackward(moveSpeed)
+    if data == b'\x04':
+        motorFunctions.turnLeft(0.3)
+    if data == b'\x05':
+        motorFunctions.turnRight(0.3)
+    if data == b'\x06':
+        motorFunctions.rotateLeftInPlace()
+    if data == b'\x07':
+        motorFunctions.rotateRightInPlace()
 
 # close sockets
 print("Client disconnected. Now quitting...")
