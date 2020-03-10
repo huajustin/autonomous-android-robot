@@ -122,13 +122,8 @@ class MyServer(BaseHTTPRequestHandler):
             <p>Current temperature is {}</p>
             
             <form action="/" method="POST">
-                Robot control: <br />
-                <input type="submit" name="submit" value="Forward"> <br />
-                <input type="submit" name="submit" value="Left">
-                <input type="submit" name="submit" value="Right"><br />
-                <input type="submit" name="submit" value="Backward"><br />
-                <input type="submit" name="submit" value="Stop"><br />
-                <input type="submit" name="submit" value="Camera"> 
+                Camera control: <br />
+                <input type="submit" name="submit" value="Camera On/Off"> 
             </form>
             </body>
             </html>
@@ -147,23 +142,6 @@ class MyServer(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length).decode("utf-8")   # Get the data
         post_data = post_data.split("=")[1]    # Only keep the value
         print(post_data)
-        speed = 1
-        if post_data == 'Forward':
-            #motorFunctions.moveForward(speed)
-            print("car is moving forward")
-        elif post_data == 'Backward':
-            #motorFunctions.moveBackward(speed)
-            print("car is moving backward")
-        if post_data =='Left':
-            #motorFunctions.turnLeft(speed)
-            print("car is rotating left")
-        elif post_data == 'Right':
-            #motorFunctions.turnRight(speed)
-            print("car is rotating right")
-        
-        if post_data == 'Stop':
-            #motorFunctions.stop()
-            print("stopped")
         if post_data=="Camera":
             #when the user press on the camera button, 
             #change the state of camera state to start/stop taking pictures
