@@ -18,17 +18,6 @@ import adafruit_rgb_display.st7735 as st7735
 host_name = '137.82.226.228'    #Raspberry Pi IP address
 host_port = 8000
 
-#setup camera
-camera =PiCamera()
-camera.resolution = (128, 128) 
-width = disp.width   # we swap height/width to rotate it to landscape!
-height = disp.height
-image = Image.new('RGB', (width, height))
-camera.framerate = 30
-
-# Get drawing object to draw on image.
-draw = ImageDraw.Draw(image)
-
 #setup LCD
 # Configuration for CS and DC pins (these are PiTFT defaults):
 cs_pin = digitalio.DigitalInOut(board.CE0)
@@ -43,6 +32,19 @@ spi = board.SPI()
 
 disp = st7735.ST7735R(spi, rotation=270, height=128, x_offset=2, y_offset=3,  
                     cs=cs_pin, dc=dc_pin, rst=reset_pin, baudrate=BAUDRATE)
+
+#setup camera
+camera =PiCamera()
+camera.resolution = (128, 128) 
+width = disp.width   # we swap height/width to rotate it to landscape!
+height = disp.height
+image = Image.new('RGB', (width, height))
+camera.framerate = 30
+
+
+# Get drawing object to draw on image.
+draw = ImageDraw.Draw(image)
+
 
 #endregion
 
