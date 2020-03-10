@@ -162,7 +162,8 @@ control_mode = sys.argv[1]
 #default move speed for all three modes
 moveSpeed = 0.35
 
-if control_mode == 1:
+if control_mode == "1":
+    print("bluetooth mode")
     # bluetooth control
     # get server socket and set UUID and port number
     server_socket=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
@@ -193,27 +194,29 @@ if control_mode == 1:
         if not data:
             break
         if data == b'\x01':
-            motorFunctions.stop()
+            stop()
         if data == b'\x02':
-            motorFunctions.moveForward(moveSpeed)
+            moveForward(moveSpeed)
         if data == b'\x03':
-            motorFunctions.moveBackward(moveSpeed)
+            moveBackward(moveSpeed)
         if data == b'\x04':
-            motorFunctions.turnLeft(0.3)
+            turnLeft(0.3)
         if data == b'\x05':
-            motorFunctions.turnRight(0.3)
+            turnRight(0.3)
         if data == b'\x06':
-            motorFunctions.rotateLeftInPlace()
+            rotateLeftInPlace()
         if data == b'\x07':
-            motorFunctions.rotateRightInPlace()
+            rotateRightInPlace()
 
     # close sockets
     print("Client disconnected. Now quitting...")
     client_socket.close()
     server_socket.close()
 
-elif control_mode == 2:
+elif control_mode == "2":
+    print("web server mode")
     #use the webserver
+
     # setup the server
     http_server = HTTPServer((host_name, host_port), MyServer)
     print("server open")
@@ -225,6 +228,7 @@ elif control_mode == 2:
         http_server.server_close()
 
 else:
+    print("default mode")
     dist = 0
     speedFactor = 0.5
     direction = 0 # left is 1, right is 2
