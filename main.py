@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import math
 import spidev
@@ -262,7 +263,7 @@ class MyServer(BaseHTTPRequestHandler):
 #############################################
 # Main loop function
 #############################################
-control_mode = 0
+control_mode = sys.argv
 if control_mode == 2:
     #web control
     http_server = HTTPServer((host_name, host_port), MyServer)
