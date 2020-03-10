@@ -3,6 +3,7 @@ import os
 import time
 import math
 import spidev
+import bluetooth
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
