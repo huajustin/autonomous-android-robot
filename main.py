@@ -118,7 +118,8 @@ class MyServer(BaseHTTPRequestHandler):
                 <input type="submit" name="submit" value="Forward"> <br />
                 <input type="submit" name="submit" value="Left">
                 <input type="submit" name="submit" value="Right"><br />
-                <input type="submit" name="submit" value="Backward"> 
+                <input type="submit" name="submit" value="Backward"><br />
+                <input type="submit" name="submit" value="Stop"> 
             </form>
             </body>
             </html>
@@ -141,11 +142,14 @@ class MyServer(BaseHTTPRequestHandler):
             moveBackward(moveSpeed)
             print("car is moving backward")
         if post_data =='Left':
-            rotateLeft(moveSpeed)
+            turnLeft(moveSpeed)
             print("car is rotating left")
         elif post_data == 'Right':
-            rotateRight(moveSpeed)
+            turnRight(moveSpeed)
             print("car is rotating right")
+        if post_data == 'Stop':
+            stop()
+            print("stopped")
         
         self._redirect('/') # finished handling request, redirect back to the root url
 
@@ -195,68 +199,16 @@ try:
             dist = 0
             decayFactor = 0.5
             turnLeft(0.3)
-#             while lLevel or rLevel:
-#                 if lLevel and not mLevel:
-#                     turnLeft(.2)
-#                     break
-#                 elif rLevel and not mLevel:
-#                     turnRight(moveSpeed * speedFactor * decayFactor)
-#                 elif decayFactor <= 0.2:
-#                     break
-#                 elif not mLevel and not lLevel and not rLevel:
-#                     moveBackward(0.2)
-#                 else:
-#                     break
-#                 decayFactor -= 0.05
-#                 turnLeft(moveSpeed * decayFactor)
-#                 print(decayFactor)
-#                 #time.sleep(0.1)
-#                 lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
-#                 rLevel = ReadChannel(rSensor) in range(LOWER,UPPER)
-#                 mLevel = ReadChannel(mSensor) in range(LOWER,UPPER)
-#                 print("LEFT: " + str(ReadChannel(lSensor)), end = " ")
-#                 print("MIDDLE: " + str(ReadChannel(mSensor)), end = " ")
-#                 print("RIGHT: " + str(ReadChannel(rSensor)))
-#                 print("LEFTL00P")
             direction = 1
             print("left")
         elif (mLevel and not lLevel and rLevel) or rLevel:
             dist = 0
             decayFactor = 0.5
             turnRight(0.3)
-#             while lLevel or rLevel:
-#                 if rLevel and not mLevel:
-#                     turnRight(.2)
-#                     break
-#                 elif lLevel and not mLevel:
-#                     turnLeft(moveSpeed * speedFactor * decayFactor)
-#                 elif decayFactor <= 0.2:
-#                     break
-#                 elif not mLevel and not lLevel and not rLevel:
-#                     moveBackward(0.2)
-#                 else:
-#                     break
-#                 decayFactor -= 0.05
-#                 print(decayFactor)
-#                 turnRight(moveSpeed*decayFactor)
-#                 #time.sleep(0.1)
-#                 lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
-#                 rLevel = ReadChannel(rSensor) in range(LOWER,UPPER)
-#                 mLevel = ReadChannel(mSensor) in range(LOWER,UPPER)
-#                 print("lL: " + str(ReadChannel(lSensor)), end = " ")
-#                 print("mL: " + str(ReadChannel(mSensor)), end = " ")
-#                 print("rL: " + str(ReadChannel(rSensor)))
-#                 print("RIGHTL00P")
             direction = 2
             print("right")
-        #elif not mLevel and not lLevel and not rLevel:
         else:
             print("forward no reading")
-            #if direction == 1:
-                #turnLeft(speedFactor)
-            #elif direction == 2:
-                #turnRight(speedFactor)
-            #else:
             moveForward(moveSpeed)
             dist += moveSpeed * 2 * math.pi * 3
             if dist >=  30: # 30 for 3cm
