@@ -13,9 +13,13 @@ import board
 from PIL import Image, ImageDraw
 import adafruit_rgb_display.st7735 as st7735 
 
-#server modules import
+#server modules import for web control
 from threading import Thread
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
+#bluetooth cellphone control
+import bluetooth
+
 #############################################
 # Motor definitions and functions
 #############################################
@@ -228,22 +232,22 @@ class MyServer(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length).decode("utf-8")   # Get the data
         post_data = post_data.split("=")[1]    # Only keep the value
         print(post_data)
-        speed = 1
+        speed = 0.35
         if post_data == 'Forward':
-            motorFunctions.moveForward(speed)
+            moveForward(speed)
             print("car is moving forward")
         elif post_data == 'Backward':
-            motorFunctions.moveBackward(speed)
+            moveBackward(speed)
             print("car is moving backward")
         if post_data =='Left':
-            motorFunctions.turnLeft(speed)
+            turnLeft(speed)
             print("car is rotating left")
         elif post_data == 'Right':
-            motorFunctions.turnRight(speed)
+            turnRight(speed)
             print("car is rotating right")
         
         if post_data == 'Stop':
-            motorFunctions.stop()
+            stop()
             print("stopped")
         if post_data=="Camera":
             #when the user press on the camera button, 
@@ -258,8 +262,9 @@ class MyServer(BaseHTTPRequestHandler):
 #############################################
 # Main loop function
 #############################################
-server_enabled = False
-if server_enabled:
+control_mode = 0
+if control_mode == 2:
+    #web control
     http_server = HTTPServer((host_name, host_port), MyServer)
     print("server open")
     try:
@@ -268,6 +273,55 @@ if server_enabled:
     except KeyboardInterrupt:
         print("server exception")
         http_server.server_close()
+elif control_mode == 1:
+    # get server socket and set UUID and port number
+    server_socket=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+    uuid = "56e8a14a-80b3-11e5-8bcf-feff819cdc9f"
+    port = bluetooth.PORT_ANY
+
+    # set up the server socket and listen in on the connection
+    server_socket.bind(("",port))
+    server_socket.listen(1)
+    bluetooth.advertise_service( server_socket, "Bluetooth Server",
+                                service_id = uuid, 
+                    service_classes = [ uuid, bluetooth.SERIAL_PORT_CLASS ],profiles = [ bluetooth.SERIAL_PORT_PROFILE ]
+                    )
+    print("Currently looking for connections...")
+
+    # blocking call, waits until a client connects to the socket
+    client_socket,address = server_socket.accept()
+    print("Accepted connection from {}".format(address))
+
+    moveSpeed = 0.35
+    # loop to receive communication from client
+    while 1: 
+        data = client_socket.recv(1024)
+        print(data)
+        # if client sends an exit signal, then break this loop
+        if (data == b'\x00'):
+            break
+        # if client unexpectedly disconnects, also break
+        if not data:
+            break
+        if data == b'\x01':
+            motorFunctions.stop()
+        if data == b'\x02':
+            motorFunctions.moveForward(moveSpeed)
+        if data == b'\x03':
+            motorFunctions.moveBackward(moveSpeed)
+        if data == b'\x04':
+            motorFunctions.turnLeft(0.3)
+        if data == b'\x05':
+            motorFunctions.turnRight(0.3)
+        if data == b'\x06':
+            motorFunctions.rotateLeftInPlace()
+        if data == b'\x07':
+            motorFunctions.rotateRightInPlace()
+
+    # close sockets
+    print("Client disconnected. Now quitting...")
+    client_socket.close()
+    server_socket.close()
 else:
     dist = 0
     speedFactor = 0.5
