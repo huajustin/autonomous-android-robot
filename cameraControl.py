@@ -123,8 +123,9 @@ class MyServer(BaseHTTPRequestHandler):
             
             <form action="/" method="POST">
                 Camera control: <br />
-                <input type="submit" name="submit" value="Camera On/Off"> 
+                <input type="submit" name="submit" value="Camera"> 
             </form>
+            <img src="picture1.bmp" width="640" height="480">
             </body>
             </html>
         '''
