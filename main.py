@@ -1,3 +1,4 @@
+import sys
 import os
 import time
 import math
@@ -7,7 +8,6 @@ GPIO.setmode(GPIO.BCM)
 
 from adafruit_motorkit import MotorKit
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from picamera import PiCamera
 
 #############################################
 # Motor definitions and functions
@@ -134,7 +134,7 @@ class MyServer(BaseHTTPRequestHandler):
         content_length = int(self.headers['Content-Length'])        # Get the size of data
         post_data = self.rfile.read(content_length).decode("utf-8") # Get the data
         post_data = post_data.split("=")[1]                         # Only keep the value
-
+        moveSpeed = 0.35
         if post_data == 'Forward':
             moveForward(moveSpeed)
             print("car is moving forward")
@@ -154,66 +154,130 @@ class MyServer(BaseHTTPRequestHandler):
         self._redirect('/') # finished handling request, redirect back to the root url
 
 #############################################
-# Camera definitions and functions
-#############################################
-
-#camera = PiCamera()
-
-#############################################
 # Main loop function
 #############################################
+# this is for reading parameters given by the command line execution
+control_mode = sys.argv[1]
 
-dist = 0
-speedFactor = 0.5
+#default move speed for all three modes
 moveSpeed = 0.35
-direction = 0 # left is 1, right is 2
-UPPER = 1000
-LOWER = 800
-delay = 0.2
 
-try:
-    while True:
-        lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
-        mLevel = ReadChannel(mSensor) in range(LOWER,UPPER)
-        rLevel = ReadChannel(rSensor) in range(LOWER,UPPER)
-        
-        print("l: " + str(ReadChannel(lSensor)), end = " ")
-        print("m: " + str(ReadChannel(mSensor)), end = " ")
-        print("r: " + str(ReadChannel(rSensor)))
-        if mLevel:
-            dist = 0
+if control_mode == "1":
+    print("bluetooth mode")
+    # bluetooth control
+    # get server socket and set UUID and port number
+    server_socket=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+    uuid = "56e8a14a-80b3-11e5-8bcf-feff819cdc9f"
+    port = bluetooth.PORT_ANY
+
+    # set up the server socket and listen in on the connection
+    server_socket.bind(("",port))
+    server_socket.listen(1)
+    bluetooth.advertise_service( server_socket, "Bluetooth Server",
+                                service_id = uuid, 
+                    service_classes = [ uuid, bluetooth.SERIAL_PORT_CLASS ],profiles = [ bluetooth.SERIAL_PORT_PROFILE ]
+                    )
+    print("Currently looking for connections...")
+
+    # blocking call, waits until a client connects to the socket
+    client_socket,address = server_socket.accept()
+    print("Accepted connection from {}".format(address))
+
+    # loop to receive communication from client
+    while 1: 
+        data = client_socket.recv(1024)
+        print(data)
+        # if client sends an exit signal, then break this loop
+        if (data == b'\x00'):
+            break
+        # if client unexpectedly disconnects, also break
+        if not data:
+            break
+        if data == b'\x01':
+            stop()
+        if data == b'\x02':
             moveForward(moveSpeed)
-            direction = 0
-            
-        elif mLevel and not lLevel and not rLevel:
-            dist = 0
-            moveForward(moveSpeed)
-            direction = 0
-            print("forward")
-        elif mLevel and lLevel and rLevel:
-            dist = 0
-            moveForward(moveSpeed)
-            direction = 0
-            print("90cross")
-        elif (mLevel and lLevel and not rLevel) or lLevel:
-            dist = 0
-            decayFactor = 0.5
+        if data == b'\x03':
+            moveBackward(moveSpeed)
+        if data == b'\x04':
             turnLeft(0.3)
-            direction = 1
-            print("left")
-        elif (mLevel and not lLevel and rLevel) or rLevel:
-            dist = 0
-            decayFactor = 0.5
+        if data == b'\x05':
             turnRight(0.3)
-            direction = 2
-            print("right")
-        else:
-            print("forward no reading")
-            moveForward(moveSpeed)
-            dist += moveSpeed * 2 * math.pi * 3
-            if dist >=  30: # 30 for 3cm
-                stop()
-        time.sleep(delay)
-except KeyboardInterrupt:
-    stop()
+        if data == b'\x06':
+            rotateLeftInPlace()
+        if data == b'\x07':
+            rotateRightInPlace()
+
+    # close sockets
+    print("Client disconnected. Now quitting...")
+    client_socket.close()
+    server_socket.close()
+
+elif control_mode == "2":
+    print("web server mode")
+    #use the webserver
+
+    # setup the server
+    http_server = HTTPServer((host_name, host_port), MyServer)
+    print("server open")
+    try:
+        #handle request until the user exit the web
+        http_server.serve_forever()
+    except KeyboardInterrupt:
+        print("server exception")
+        http_server.server_close()
+
+else:
+    print("default mode")
+    dist = 0
+    speedFactor = 0.5
+    direction = 0 # left is 1, right is 2
+    UPPER = 1000
+    LOWER = 800
+    delay = 0.2
+    try:
+        while True:
+            lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
+            mLevel = ReadChannel(mSensor) in range(LOWER,UPPER)
+            rLevel = ReadChannel(rSensor) in range(LOWER,UPPER)
+            
+            print("l: " + str(ReadChannel(lSensor)), end = " ")
+            print("m: " + str(ReadChannel(mSensor)), end = " ")
+            print("r: " + str(ReadChannel(rSensor)))
+            if mLevel:
+                dist = 0
+                moveForward(moveSpeed)
+                direction = 0
+                
+            elif mLevel and not lLevel and not rLevel:
+                dist = 0
+                moveForward(moveSpeed)
+                direction = 0
+                print("forward")
+            elif mLevel and lLevel and rLevel:
+                dist = 0
+                moveForward(moveSpeed)
+                direction = 0
+                print("90cross")
+            elif (mLevel and lLevel and not rLevel) or lLevel:
+                dist = 0
+                decayFactor = 0.5
+                turnLeft(0.3)
+                direction = 1
+                print("left")
+            elif (mLevel and not lLevel and rLevel) or rLevel:
+                dist = 0
+                decayFactor = 0.5
+                turnRight(0.3)
+                direction = 2
+                print("right")
+            else:
+                print("forward no reading")
+                moveForward(moveSpeed)
+                dist += moveSpeed * 2 * math.pi * 3
+                if dist >=  30: # 30 for 3cm
+                    stop()
+            time.sleep(delay)
+    except KeyboardInterrupt:
+        stop()
         
