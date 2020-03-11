@@ -62,7 +62,12 @@ class MyCamera():
         #change the state of running
         #if running == true, the while loop in the run() function will take pictures
         #if running == false, the while loop will not take pictures simply idle
-        self.running = not self.running
+        if(self.running==true):
+            print("Taking pictures is on")
+            self.running=false
+        else:
+            print("Taking pictures is off")
+            self.running=true
     
     def run(self):
         while True:
