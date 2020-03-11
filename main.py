@@ -233,9 +233,34 @@ else:
     dist = 0
     speedFactor = 0.5
     UPPER = 1000
-    LOWER = 800
-    delay = 0.03
+    LOWER = 500
+    delay = 0.02
+    upper_values = []
+    lower_values = []
+    for i in range(10):
+        upper_values.append(ReadChannel(mSensor))
+        lower_values.append(max(ReadChannel(lSensor),ReadChannel(rSensor)))
+        print("higher: " + str(upper_values[i]))
 
+    max_upper_value = 0
+    min_upper_value = 2000
+    for value in upper_values:
+        if value>max_upper_value:
+            max_upper_value = value
+        if value < min_upper_value:
+            min_upper_value = value
+
+    max_lower_value = 0
+    min_lower_value = 2000
+    for value in lower_values:
+        if value>max_lower_value:
+            max_lower_value = value
+        if value < min_lower_value:
+            min_lower_value = value
+    
+    UPPER = int(int(max_upper_value / 100) * 100) + 200
+    LOWER = int(int(min(max_lower_value, min_upper_value)/ 100) * 100) + 150
+    print(str(UPPER) + " " + str(LOWER))
     #pid control variables 
 #     KP = 0.245
 #     KD = 0.018
@@ -244,8 +269,9 @@ else:
     error2 = 0.8
     prev_error = 0.0
     min_speed = 0.2
-    max_speed = 0.9
+    max_speed = 0.8
     direction = 0
+    max_dist = 200
     try:
         while True:
             lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
@@ -260,12 +286,18 @@ else:
                 dist = 0
                 moveForward(moveSpeed)
                 direction = 0
-            elif mLevel and not lLevel and not rLevel:
-                dist = 0
-                moveForward(moveSpeed)
-                print("forward")
-                prev_error = 0.0
-                direction = 0
+                if rLevel:
+                    LEFT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),max_speed),min_speed)
+                    RIGHT_MOTOR.throttle = -max(min(moveSpeed - (error2 * KP + prev_error * KD),max_speed),min_speed)
+                    prev_error = (error2 * KP + prev_error * KD)/KP
+                    direction = 2
+                    print("right, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
+                elif lLevel:
+                    LEFT_MOTOR.throttle = -max(min(moveSpeed - (error2 * KP + prev_error * KD),max_speed),min_speed)
+                    RIGHT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),max_speed),min_speed)
+                    prev_error = (error2 * KP + prev_error * KD)/KP
+                    direction = 1
+                    print("left, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
             elif mLevel and lLevel and rLevel:
                 dist = 0
                 moveForward(moveSpeed)
@@ -295,7 +327,7 @@ else:
                 direction = 0
                 moveForward(moveSpeed)
                 dist += moveSpeed * 2 * math.pi * 3
-                if dist >= 33: # 27 for 3cm
+                if dist >= max_dist:
                     print (dist)
                     stop()
                     break
