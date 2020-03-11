@@ -271,6 +271,7 @@ else:
     min_speed = 0.2
     max_speed = 0.8
     direction = 0
+    max_dist = 200
     try:
         while True:
             lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
@@ -285,12 +286,18 @@ else:
                 dist = 0
                 moveForward(moveSpeed)
                 direction = 0
-            elif mLevel and not lLevel and not rLevel:
-                dist = 0
-                moveForward(moveSpeed)
-                print("forward")
-                prev_error = 0.0
-                direction = 0
+                if rLevel:
+                    LEFT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),max_speed),min_speed)
+                    RIGHT_MOTOR.throttle = -max(min(moveSpeed - (error2 * KP + prev_error * KD),max_speed),min_speed)
+                    prev_error = (error2 * KP + prev_error * KD)/KP
+                    direction = 2
+                    print("right, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
+                elif lLevel:
+                    LEFT_MOTOR.throttle = -max(min(moveSpeed - (error2 * KP + prev_error * KD),max_speed),min_speed)
+                    RIGHT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),max_speed),min_speed)
+                    prev_error = (error2 * KP + prev_error * KD)/KP
+                    direction = 1
+                    print("left, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
             elif mLevel and lLevel and rLevel:
                 dist = 0
                 moveForward(moveSpeed)
@@ -320,7 +327,7 @@ else:
                 direction = 0
                 moveForward(moveSpeed)
                 dist += moveSpeed * 2 * math.pi * 3
-                if dist >= 39: # 39 for 3cm
+                if dist >= max_dist:
                     print (dist)
                     stop()
                     break
