@@ -233,14 +233,13 @@ else:
     dist = 0
     speedFactor = 0.5
     UPPER = 1000
-    LOWER = 800
-    delay = 0.2
+    LOWER = 500
+    delay = 0.03
 
     #pid control variables 
-    KP = 0.2
-    KD = 0.01
-    error1 = 0.7
-    error2 = 1
+    KP = 0.245
+    KD = 0.018
+    error2 = 0.8
     prev_error = 0.0
     min_speed = 0
     max_speed = 1
@@ -271,29 +270,18 @@ else:
                 dist = 0
                 #turnLeft(0.3)
                 #use the pid control to turn left
-                if mLevel:
-                    LEFT_MOTOR.throttle = max(min(moveSpeed - (error1 * KP + prev_error * KD),min_speed),max_speed)
-                    RIGHT_MOTOR.throttle = max(min(moveSpeed + (error1 * KP + prev_error * KD),min_speed),max_speed)
-                    prev_error = error1
-                else:
-                    LEFT_MOTOR.throttle = max(min(moveSpeed - (error2 * KP + prev_error * KD),min_speed),max_speed)
-                    RIGHT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),min_speed),max_speed)
-                    prev_error = error2
-                direction = 1
-                print("left")
+                LEFT_MOTOR.throttle = -max(min(moveSpeed - (error2 * KP + prev_error * KD),max_speed),min_speed)
+                RIGHT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),max_speed),min_speed)
+                prev_error = (error2 * KP + prev_error * KD)/KP
+                print("left, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
             elif (mLevel and not lLevel and rLevel) or rLevel:
                 dist = 0
                 #turnRight(0.3)
-                #use pid control to turn righte
-                if mLevel:
-                    LEFT_MOTOR.throttle = max(min(moveSpeed + (error1 * KP + prev_error * KD),min_speed),max_speed)
-                    RIGHT_MOTOR.throttle = max(min(moveSpeed - (error1 * KP + prev_error * KD),min_speed),max_speed)
-                    prev_error = error1
-                else:
-                    LEFT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),min_speed),max_speed)
-                    RIGHT_MOTOR.throttle = max(min(moveSpeed - (error2 * KP + prev_error * KD),min_speed),max_speed)
-                    prev_error = error2
-                print("right")
+                #use pid control to turn right
+                LEFT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),max_speed),min_speed)
+                RIGHT_MOTOR.throttle = -max(min(moveSpeed - (error2 * KP + prev_error * KD),max_speed),min_speed)
+                prev_error = (error2 * KP + prev_error * KD)/KP
+                print("right, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
             else:
                 print("forward no reading")
                 moveForward(moveSpeed)
