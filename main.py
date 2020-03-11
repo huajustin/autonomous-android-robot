@@ -233,34 +233,9 @@ else:
     dist = 0
     speedFactor = 0.5
     UPPER = 1000
-    LOWER = 500
-    delay = 0.02
-    upper_values = []
-    lower_values = []
-    for i in range(10):
-        upper_values.append(ReadChannel(mSensor))
-        lower_values.append(max(ReadChannel(lSensor),ReadChannel(rSensor)))
-        print("higher: " + str(upper_values[i]))
+    LOWER = 800
+    delay = 0.03
 
-    max_upper_value = 0
-    min_upper_value = 2000
-    for value in upper_values:
-        if value>max_upper_value:
-            max_upper_value = value
-        if value < min_upper_value:
-            min_upper_value = value
-
-    max_lower_value = 0
-    min_lower_value = 2000
-    for value in lower_values:
-        if value>max_lower_value:
-            max_lower_value = value
-        if value < min_lower_value:
-            min_lower_value = value
-    
-    UPPER = int(int(max_upper_value / 100) * 100) + 200
-    LOWER = int(int(min(max_lower_value, min_upper_value)/ 100) * 100) + 150
-    print(str(UPPER) + " " + str(LOWER))
     #pid control variables 
 #     KP = 0.245
 #     KD = 0.018
@@ -269,7 +244,7 @@ else:
     error2 = 0.8
     prev_error = 0.0
     min_speed = 0.2
-    max_speed = 0.8
+    max_speed = 0.9
     direction = 0
     try:
         while True:
@@ -320,7 +295,7 @@ else:
                 direction = 0
                 moveForward(moveSpeed)
                 dist += moveSpeed * 2 * math.pi * 3
-                if dist >= 39: # 39 for 3cm
+                if dist >= 33: # 27 for 3cm
                     print (dist)
                     stop()
                     break
