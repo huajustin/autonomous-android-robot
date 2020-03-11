@@ -237,12 +237,15 @@ else:
     delay = 0.03
 
     #pid control variables 
-    KP = 0.245
-    KD = 0.018
+#     KP = 0.245
+#     KD = 0.018
+    KP=0.248
+    KD = 0.02
     error2 = 0.8
     prev_error = 0.0
     min_speed = 0
     max_speed = 1
+    direction = 0
     try:
         while True:
             lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
@@ -256,17 +259,20 @@ else:
                 #as long as the middle level is detecting, go straight
                 dist = 0
                 moveForward(moveSpeed)
+                direction = 0
             elif mLevel and not lLevel and not rLevel:
                 dist = 0
                 moveForward(moveSpeed)
                 print("forward")
                 prev_error = 0.0
+                direction = 0
             elif mLevel and lLevel and rLevel:
                 dist = 0
                 moveForward(moveSpeed)
                 print("90cross")
                 prev_error = 0.0
-            elif (mLevel and lLevel and not rLevel) or lLevel:
+                direction = 0
+            elif (mLevel and lLevel and not rLevel) or lLevel or direction == 1:
                 dist = 0
                 #turnLeft(0.3)
                 #use the pid control to turn left
@@ -274,7 +280,8 @@ else:
                 RIGHT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),max_speed),min_speed)
                 prev_error = (error2 * KP + prev_error * KD)/KP
                 print("left, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
-            elif (mLevel and not lLevel and rLevel) or rLevel:
+                direction = 1
+            elif (mLevel and not lLevel and rLevel) or rLevel or direction == 2:
                 dist = 0
                 #turnRight(0.3)
                 #use pid control to turn right
@@ -282,8 +289,10 @@ else:
                 RIGHT_MOTOR.throttle = -max(min(moveSpeed - (error2 * KP + prev_error * KD),max_speed),min_speed)
                 prev_error = (error2 * KP + prev_error * KD)/KP
                 print("right, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
+                direction = 2
             else:
                 print("forward no reading")
+                direction = 0
                 moveForward(moveSpeed)
                 dist += moveSpeed * 2 * math.pi * 3
                 if dist >=  30: # 30 for 3cm
