@@ -201,13 +201,13 @@ if control_mode == "1":
         if data == b'\x03':
             moveBackward(moveSpeed)
         if data == b'\x04':
-            turnLeft(0.3)
+            turnLeft(moveSpeed)
         if data == b'\x05':
-            turnRight(0.3)
+            turnRight(moveSpeed)
         if data == b'\x06':
-            rotateLeftInPlace()
+            rotateLeftInPlace(moveSpeed)
         if data == b'\x07':
-            rotateRightInPlace()
+            rotateRightInPlace(moveSpeed)
 
     # close sockets
     print("Client disconnected. Now quitting...")
