@@ -295,8 +295,10 @@ else:
                 direction = 0
                 moveForward(moveSpeed)
                 dist += moveSpeed * 2 * math.pi * 3
-                if dist >=  30: # 30 for 3cm
+                if dist >= 33: # 27 for 3cm
+                    print (dist)
                     stop()
+                    break
             time.sleep(delay)
     except KeyboardInterrupt:
         stop()
