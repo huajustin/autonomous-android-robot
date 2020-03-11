@@ -232,10 +232,17 @@ else:
     print("default mode")
     dist = 0
     speedFactor = 0.5
-    direction = 0 # left is 1, right is 2
     UPPER = 1000
-    LOWER = 800
-    delay = 0.2
+    LOWER = 500
+    delay = 0.03
+
+    #pid control variables 
+    KP = 0.245
+    KD = 0.018
+    error2 = 0.8
+    prev_error = 0.0
+    min_speed = 0
+    max_speed = 1
     try:
         while True:
             lLevel = ReadChannel(lSensor) in range(LOWER,UPPER)
@@ -246,32 +253,35 @@ else:
             print("m: " + str(ReadChannel(mSensor)), end = " ")
             print("r: " + str(ReadChannel(rSensor)))
             if mLevel:
+                #as long as the middle level is detecting, go straight
                 dist = 0
                 moveForward(moveSpeed)
-                direction = 0
-                
             elif mLevel and not lLevel and not rLevel:
                 dist = 0
                 moveForward(moveSpeed)
-                direction = 0
                 print("forward")
+                prev_error = 0.0
             elif mLevel and lLevel and rLevel:
                 dist = 0
                 moveForward(moveSpeed)
-                direction = 0
                 print("90cross")
+                prev_error = 0.0
             elif (mLevel and lLevel and not rLevel) or lLevel:
                 dist = 0
-                decayFactor = 0.5
-                turnLeft(0.3)
-                direction = 1
-                print("left")
+                #turnLeft(0.3)
+                #use the pid control to turn left
+                LEFT_MOTOR.throttle = -max(min(moveSpeed - (error2 * KP + prev_error * KD),max_speed),min_speed)
+                RIGHT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),max_speed),min_speed)
+                prev_error = (error2 * KP + prev_error * KD)/KP
+                print("left, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
             elif (mLevel and not lLevel and rLevel) or rLevel:
                 dist = 0
-                decayFactor = 0.5
-                turnRight(0.3)
-                direction = 2
-                print("right")
+                #turnRight(0.3)
+                #use pid control to turn right
+                LEFT_MOTOR.throttle = max(min(moveSpeed + (error2 * KP + prev_error * KD),max_speed),min_speed)
+                RIGHT_MOTOR.throttle = -max(min(moveSpeed - (error2 * KP + prev_error * KD),max_speed),min_speed)
+                prev_error = (error2 * KP + prev_error * KD)/KP
+                print("right, l: " + str(LEFT_MOTOR.throttle)+" r: "+str(RIGHT_MOTOR.throttle))
             else:
                 print("forward no reading")
                 moveForward(moveSpeed)
