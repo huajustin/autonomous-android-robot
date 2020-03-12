@@ -235,12 +235,14 @@ else:
     UPPER = 1000
     LOWER = 500
     delay = 0.02
+
+    #automatically detect the current surface and track reflection rate, record them as UPPER and LOWER bounds
+    #so that the robot can work on any surfaces and any tracks
     upper_values = []
     lower_values = []
     for i in range(10):
         upper_values.append(ReadChannel(mSensor))
         lower_values.append(max(ReadChannel(lSensor),ReadChannel(rSensor)))
-        print("higher: " + str(upper_values[i]))
 
     max_upper_value = 0
     min_upper_value = 2000
